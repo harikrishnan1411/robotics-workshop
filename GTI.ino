@@ -124,13 +124,13 @@ void red_on() {
   digitalWrite(B, HIGH);
 }
 
-void blue_on() {
+void green_on() {
   digitalWrite(R, HIGH);
   digitalWrite(G, LOW);
   digitalWrite(B, HIGH);
 }
 
-void green_on() {
+void blue_on() {
   digitalWrite(R, HIGH);
   digitalWrite(G, HIGH);
   digitalWrite(B, LOW);
@@ -301,10 +301,10 @@ void move_check() {
 
 int ir_check() {
   if (digitalRead(IR_SENSOR) == LOW) {
-    red_on();
+    red_on();                            //obstacle detected
     return 1;
   } else {
-    blue_on();
+    green_on();                            //No obstacle
     return 0;
   }
 }
