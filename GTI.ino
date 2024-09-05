@@ -13,11 +13,11 @@
 #define RM_E 10
 #define LM_E 11
 
-int sensor_limit = 500;
+int sensor_limit = 400;
 int dir = 1;
 bool r_s, c_s, l_s;
 String sensor;
-
+int node = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -32,7 +32,7 @@ void setup() {
   pinMode(LM_1, OUTPUT);
   pinMode(LM_2, OUTPUT);
   leds_off();
-  set_speed(200, 240);
+  set_speed(200, 200);
 }
 
 void set_speed(int l_v, int r_v) {
@@ -107,7 +107,7 @@ void sensor_check() {
   c_s = analogRead(C_S) < sensor_limit ? 1 : 0;
   l_s = analogRead(L_S) < sensor_limit ? 1 : 0;
   sensor = String(l_s) + String(c_s) + String(r_s);
-  Serial.println(sensor);
+  //Serial.println(sensor);
 }
 
 void buzzer_on() {
@@ -124,13 +124,13 @@ void red_on() {
   digitalWrite(B, HIGH);
 }
 
-void green_on() {
+void blue_on() {
   digitalWrite(R, HIGH);
   digitalWrite(G, LOW);
   digitalWrite(B, HIGH);
 }
 
-void blue_on() {
+void green_on() {
   digitalWrite(R, HIGH);
   digitalWrite(G, HIGH);
   digitalWrite(B, LOW);
@@ -142,56 +142,173 @@ void leds_off() {
   digitalWrite(B, HIGH);
 }
 
-void rotate_right() {
-  turn_right();
-  delay(500);
-  while (1) {
-    turn_right();
-    sensor_check();
-    if (sensor == "101") {
-      break;
-    }
-  }
-}
+
 void line_follow() {
   sensor_check();
   while (sensor != "000") {
     sensor_check();
     if (sensor == "101") {
       forward();
-      green_on();
     } else if (sensor == "100") {
       mild_right();
-      red_on();
     } else if (sensor == "110") {
       turn_right();
       dir = 2;
     } else if (sensor == "001") {
       mild_left();
-      blue_on();
-
     } else if (sensor == "011") {
       turn_left();
       dir = 0;
     } else if (sensor == "111") {
       if (dir == 2) {
-        mild_right();
-
+        soft_right();
         dir = 1;
       } else if (dir == 0) {
-
-        mild_left();
+        soft_left();
         dir = 1;
       } else {
-        // rotate_right();
-
         dir = 1;
       }
     } else if (sensor == "000") {
-      buzzer_on();
       forward();
-      halt();
+      buzzer_on();
+      delay(500);
       buzzer_off();
+      node = node + 1;
+      Serial.print("node: ");
+      Serial.println(node);
+      //turn_left();
+      //halt();
+    }
+  }
+}
+
+void line_follow_1() {
+  sensor_check();
+  while (sensor != "000") {
+    sensor_check();
+    if (sensor == "101") {
+      forward();
+    } else if (sensor == "100") {
+      mild_right();
+    } else if (sensor == "110") {
+      turn_right();
+      dir = 2;
+    } else if (sensor == "001") {
+      mild_left();
+    } else if (sensor == "011") {
+      turn_left();
+      dir = 0;
+    } else if (sensor == "111") {
+      if (dir == 2) {
+        soft_right();
+        dir = 1;
+      } else if (dir == 0) {
+        soft_left();
+        dir = 1;
+      } else {
+        dir = 1;
+      }
+    } else if (sensor == "000") {
+      forward();
+      buzzer_on();
+      red_on();
+      delay(500);
+      buzzer_off();
+      leds_off();
+      node = node + 1;
+      Serial.print("node: ");
+      Serial.println(node);
+
+
+      sensor_check();
+      if (node == 1) {
+        forward();
+        delay(500);  // Add a delay to ensure it's moving forward properly
+        sensor_check();
+      } else if (node == 2) {
+        // Turn right and re-align after node 2
+        turn_right();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_right();  // Gradual right to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 3) {
+        // Turn left and re-align after node 3
+        turn_left();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual left to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 4) {
+        // Turn left and re-align after node 3
+        turn_left();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual left to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 6) {
+        // Turn left and re-align after node 3
+        turn_left();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual left to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 10) {
+        // Turn left and re-align after node 3
+        turn_left();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual left to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 12) {
+        // Turn left and re-align after node 3
+        turn_left();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual left to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 13) {
+        // Turn left and re-align after node 3
+        turn_left();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual left to align with the line
+          sensor_check();
+        }
+        forward();  // Move forward after aligning
+      } else if (node == 14) {
+        // Turn right and re-align after node 2
+        turn_right();
+        delay(500);  // Adjust delay as needed
+        sensor_check();
+        while (sensor != "101") {
+          mild_right();  // Gradual right to align with the line
+          sensor_check();
+        }
+        forward();
+      } else if (node == 16) {
+        halt();
+      }
     }
   }
 }
@@ -221,8 +338,7 @@ void ir_check() {
   }
 }
 void run_task() {
-  //write your code here
-  forward();
+  line_follow_1();
 }
 
 void rgb_check() {
@@ -242,13 +358,11 @@ void array_display() {
 }
 void loop() {
   // put your main code here, to run repeatedly:
-  //run_task();
+  run_task();
   //Serial.println(String(analogRead(A2)) + "\t" + String(analogRead(A1)) + "\t" + String(analogRead(A0)));
   //delay(100);
-  line_follow();
-  //forward();
+  //line_follow();
+  // rgb_check();
+  // ir_check();
   //sensor_check();
-  //array_display();
-  //rgb_check();
-  //ir_check();
 }
