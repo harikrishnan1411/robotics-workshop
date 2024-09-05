@@ -13,7 +13,7 @@
 #define RM_E 10
 #define LM_E 11
 
-int sensor_limit = 400;
+int sensor_limit = 350;
 int dir = 1;
 bool r_s, c_s, l_s;
 String sensor;
@@ -32,7 +32,7 @@ void setup() {
   pinMode(LM_1, OUTPUT);
   pinMode(LM_2, OUTPUT);
   leds_off();
-  set_speed(200, 200);
+  set_speed(175, 175);
 }
 
 void set_speed(int l_v, int r_v) {
@@ -107,7 +107,7 @@ void sensor_check() {
   c_s = analogRead(C_S) < sensor_limit ? 1 : 0;
   l_s = analogRead(L_S) < sensor_limit ? 1 : 0;
   sensor = String(l_s) + String(c_s) + String(r_s);
-  //Serial.println(sensor);
+  Serial.println(sensor);
 }
 
 void buzzer_on() {
@@ -143,45 +143,7 @@ void leds_off() {
 }
 
 
-void line_follow() {
-  sensor_check();
-  while (sensor != "000") {
-    sensor_check();
-    if (sensor == "101") {
-      forward();
-    } else if (sensor == "100") {
-      mild_right();
-    } else if (sensor == "110") {
-      turn_right();
-      dir = 2;
-    } else if (sensor == "001") {
-      mild_left();
-    } else if (sensor == "011") {
-      turn_left();
-      dir = 0;
-    } else if (sensor == "111") {
-      if (dir == 2) {
-        soft_right();
-        dir = 1;
-      } else if (dir == 0) {
-        soft_left();
-        dir = 1;
-      } else {
-        dir = 1;
-      }
-    } else if (sensor == "000") {
-      forward();
-      buzzer_on();
-      delay(500);
-      buzzer_off();
-      node = node + 1;
-      Serial.print("node: ");
-      Serial.println(node);
-      //turn_left();
-      //halt();
-    }
-  }
-}
+
 
 void line_follow_1() {
   sensor_check();
@@ -223,6 +185,12 @@ void line_follow_1() {
 
       sensor_check();
       if (node == 1) {
+        if(ir_check) {
+          red_on();
+          delay(200);
+          leds_off();
+          forward();
+        }
         forward();
         delay(500);  // Add a delay to ensure it's moving forward properly
         sensor_check();
@@ -307,6 +275,7 @@ void line_follow_1() {
         }
         forward();
       } else if (node == 16) {
+        //set_speed(0,0);
         halt();
       }
     }
@@ -330,11 +299,13 @@ void move_check() {
   delay(4000);
 }
 
-void ir_check() {
+int ir_check() {
   if (digitalRead(IR_SENSOR) == LOW) {
-    buzzer_on();
+    red_on();
+    return 1;
   } else {
-    buzzer_off();
+    blue_on();
+    return 0;
   }
 }
 void run_task() {
@@ -358,7 +329,8 @@ void array_display() {
 }
 void loop() {
   // put your main code here, to run repeatedly:
-  run_task();
+  //run_task();
+  int x = ir_check();
   //Serial.println(String(analogRead(A2)) + "\t" + String(analogRead(A1)) + "\t" + String(analogRead(A0)));
   //delay(100);
   //line_follow();
