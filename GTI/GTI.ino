@@ -1,3 +1,6 @@
+
+
+
 #define IR_SENSOR 2
 #define R 6
 #define G 5
@@ -18,6 +21,7 @@ int dir = 1;
 bool r_s, c_s, l_s;
 String sensor;
 int node = 0;
+bool red_flag = 0, blue_flag = 0, green_flag = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -32,7 +36,7 @@ void setup() {
   pinMode(LM_1, OUTPUT);
   pinMode(LM_2, OUTPUT);
   leds_off();
-  set_speed(175, 175);
+  set_speed(180, 180);
 }
 
 void set_speed(int l_v, int r_v) {
@@ -107,9 +111,26 @@ void sensor_check() {
   c_s = analogRead(C_S) < sensor_limit ? 1 : 0;
   l_s = analogRead(L_S) < sensor_limit ? 1 : 0;
   sensor = String(l_s) + String(c_s) + String(r_s);
-  Serial.println(sensor);
+  //Serial.println(sensor);
 }
 
+void play_tone(int frequency, int duration) {
+  int half_period = 1000000 / (frequency * 2);  // microseconds for half a wave cycle
+  long cycles = frequency * duration / 1000;  // number of cycles in given duration
+
+  for (long i = 0; i < cycles; i++) {
+    digitalWrite(BUZZER, HIGH);  // turn the buzzer on
+    delayMicroseconds(half_period);  // wait for half a wave cycle
+    digitalWrite(BUZZER, LOW);  // turn the buzzer off
+    delayMicroseconds(half_period);  // wait for half a wave cycle
+  }
+}
+void buzzer_tune() {
+  play_tone(1000, 500);  // Plays a 1000Hz tone for 500ms
+  delay(200);  // Short pause between tones
+  play_tone(1200, 500);  // Plays a 1200Hz tone for 500ms
+  delay(200);  // Short pause between tones
+}
 void buzzer_on() {
   digitalWrite(BUZZER, HIGH);
 }
@@ -124,13 +145,13 @@ void red_on() {
   digitalWrite(B, HIGH);
 }
 
-void blue_on() {
+void green_on() {
   digitalWrite(R, HIGH);
   digitalWrite(G, LOW);
   digitalWrite(B, HIGH);
 }
 
-void green_on() {
+void blue_on() {
   digitalWrite(R, HIGH);
   digitalWrite(G, HIGH);
   digitalWrite(B, LOW);
@@ -145,7 +166,7 @@ void leds_off() {
 
 
 
-void line_follow_1() {
+void line_follow() {
   sensor_check();
   while (sensor != "000") {
     sensor_check();
@@ -174,10 +195,8 @@ void line_follow_1() {
     } else if (sensor == "000") {
       forward();
       buzzer_on();
-      red_on();
       delay(500);
       buzzer_off();
-      leds_off();
       node = node + 1;
       Serial.print("node: ");
       Serial.println(node);
@@ -185,103 +204,172 @@ void line_follow_1() {
 
       sensor_check();
       if (node == 1) {
-        if(ir_check) {
-          red_on();
-          delay(200);
-          leds_off();
-          forward();
-        }
         forward();
-        delay(500);  // Add a delay to ensure it's moving forward properly
+        green_on();
+        delay(500);
+        leds_off();
         sensor_check();
       } else if (node == 2) {
         // Turn right and re-align after node 2
-        turn_right();
-        delay(500);  // Adjust delay as needed
+        turn_left();
+        delay(500);
         sensor_check();
         while (sensor != "101") {
-          mild_right();  // Gradual right to align with the line
+          mild_left();  // Gradual right to align with the line
           sensor_check();
         }
         forward();  // Move forward after aligning
       } else if (node == 3) {
         // Turn left and re-align after node 3
-        turn_left();
-        delay(500);  // Adjust delay as needed
+        turn_right();
+        delay(500);
         sensor_check();
         while (sensor != "101") {
-          mild_left();  // Gradual left to align with the line
+          mild_right();
           sensor_check();
         }
         forward();  // Move forward after aligning
       } else if (node == 4) {
         // Turn left and re-align after node 3
-        turn_left();
-        delay(500);  // Adjust delay as needed
+        turn_right();
+        delay(500);
         sensor_check();
         while (sensor != "101") {
-          mild_left();  // Gradual left to align with the line
+          mild_right();
           sensor_check();
         }
         forward();  // Move forward after aligning
       } else if (node == 6) {
         // Turn left and re-align after node 3
-        turn_left();
-        delay(500);  // Adjust delay as needed
+        turn_right();
+        delay(500);
         sensor_check();
         while (sensor != "101") {
-          mild_left();  // Gradual left to align with the line
+          mild_right();
           sensor_check();
         }
         forward();  // Move forward after aligning
+      } else if (node == 7) {
+
+        if (ir_check()) {
+          halt();
+          red_flag = 1;
+          red_on();
+          delay(500);
+          leds_off();
+          forward();
+        } else {
+          forward();
+        }
+
+      } else if (node == 9) {
+
+        if (ir_check()) {
+          halt();
+          green_flag = 1;
+          green_on();
+          delay(500);
+          leds_off();
+          forward();
+        } else {
+          forward();
+        }
+
       } else if (node == 10) {
-        // Turn left and re-align after node 3
-        turn_left();
-        delay(500);  // Adjust delay as needed
+
+        turn_right();
+        delay(500);
         sensor_check();
         while (sensor != "101") {
-          mild_left();  // Gradual left to align with the line
+          mild_right();
           sensor_check();
         }
-        forward();  // Move forward after aligning
-      } else if (node == 12) {
-        // Turn left and re-align after node 3
-        turn_left();
-        delay(500);  // Adjust delay as needed
-        sensor_check();
-        while (sensor != "101") {
-          mild_left();  // Gradual left to align with the line
-          sensor_check();
-        }
-        forward();  // Move forward after aligning
-      } else if (node == 13) {
-        // Turn left and re-align after node 3
-        turn_left();
-        delay(500);  // Adjust delay as needed
-        sensor_check();
-        while (sensor != "101") {
-          mild_left();  // Gradual left to align with the line
-          sensor_check();
-        }
-        forward();  // Move forward after aligning
+        forward();
+
       } else if (node == 14) {
+
+        turn_right();
+        delay(500);
+        sensor_check();
+        while (sensor != "101") {
+          mild_right();
+          sensor_check();
+        }
+        forward(); 
+
+      } else if (node == 15) {
+
+        if (ir_check()) {
+          blue_flag = 1;
+          halt();
+          blue_on();
+          delay(500);
+          leds_off();
+          forward();
+        }
+
+      } else if (node == 18) {
         // Turn right and re-align after node 2
         turn_right();
-        delay(500);  // Adjust delay as needed
+        delay(500);
         sensor_check();
         while (sensor != "101") {
           mild_right();  // Gradual right to align with the line
           sensor_check();
         }
         forward();
-      } else if (node == 16) {
-        //set_speed(0,0);
+      } else if (node == 20) {
+        turn_right();
+        delay(500);
+        sensor_check();
+        while (sensor != "101") {
+          mild_right();  // Gradual right to align with the line
+          sensor_check();
+        }
+        forward();
+      } else if (node == 21) {
+        turn_right();
+        delay(500);
+        sensor_check();
+        while (sensor != "101") {
+          mild_right();  // Gradual right to align with the line
+          sensor_check();
+        }
+        forward();
+      } else if (node == 23) {
+        turn_left();
+        delay(500);
+        sensor_check();
+        while (sensor != "101") {
+          mild_left();  // Gradual right to align with the line
+          sensor_check();
+        }
+        forward();
+      } else if (node == 24) {
         halt();
+        play_twinkle();
+        while (1) {
+
+          if (red_flag) {
+            red_on();
+            delay(250);
+            leds_off();
+          }
+          if (green_flag) {
+            green_on();
+            delay(250);
+            leds_off();
+          }
+          if (blue_flag) {
+            blue_on();
+            delay(250);
+            leds_off();
+          }
+        }
       }
     }
   }
 }
-
 
 void move_check() {
   //write your code here
@@ -299,17 +387,34 @@ void move_check() {
   delay(4000);
 }
 
+// void print_debug_info() {
+//   int left_ir_raw = analogRead(L_S);
+//   int center_ir_raw = analogRead(C_S);
+//   int right_ir_raw = analogRead(R_S);
+
+
+//   l_s = left_ir_raw < sensor_limit ? 1 : 0;
+//   c_s = center_ir_raw < sensor_limit ? 1 : 0;
+//   r_s = right_ir_raw < sensor_limit ? 1 : 0;
+
+//   raw_values = String(left_ir_raw) + "\t" + String(center_ir_raw) + "\t" + String(right_ir_raw);
+
+//   debug = String(l_s) + String(c_s) + String(r_s) + "\t" + raw_values + "\t Node Count: " + node;
+
+//   Serial.println(debug);
+// }
+
 int ir_check() {
   if (digitalRead(IR_SENSOR) == LOW) {
-    red_on();
+    //obstacle detected
     return 1;
   } else {
-    blue_on();
+    //No obstacle
     return 0;
   }
 }
 void run_task() {
-  line_follow_1();
+  line_follow();
 }
 
 void rgb_check() {
@@ -328,30 +433,52 @@ void array_display() {
   delay(100);
 }
 
-void print_debug_info() {
-  left_ir_raw = analogRead(L_S)
-  center_ir_raw = analogRead(C_S)
-  right_ir_raw = analogRead(R_S)
+int melody[] = {
+  262, 262, 392, 392, 440, 440, 392,   // "Twinkle, Twinkle, Little Star"
+  349, 349, 330, 330, 294, 294, 262,   // "How I wonder what you are"
+  392, 392, 349, 349, 330, 330, 294,   // "Up above the world so high"
+  392, 392, 349, 349, 330, 330, 294,   // "Like a diamond in the sky"
+  262, 262, 392, 392, 440, 440, 392,   // "Twinkle, Twinkle, Little Star"
+  349, 349, 330, 330, 294, 294, 262    // "How I wonder what you are"
+};
 
-  l_s = left_ir_raw < sensor_limit ? 1 : 0;
-  c_s = center_ir_raw < sensor_limit ? 1 : 0;
-  r_s = right_ir_raw < sensor_limit ? 1 : 0;
-  
-  raw_values = String(left_ir_raw) + "\t" + String(center_ir_raw) + "\t" + String(right_ir_raw);
+int noteDurations[] = {
+  500, 500, 500, 500, 500, 500, 1000,  // Duration for each note
+  500, 500, 500, 500, 500, 500, 1000,
+  500, 500, 500, 500, 500, 500, 1000,
+  500, 500, 500, 500, 500, 500, 1000,
+  500, 500, 500, 500, 500, 500, 1000,
+  500, 500, 500, 500, 500, 500, 1000
+};
 
-  debug = String(l_s) + String(c_s) + String(r_s) + "\t" + raw_values + "\t Node Count: " + node;
+void play_twinkle() {
+  for (int thisNote = 0; thisNote < sizeof(melody) / sizeof(melody[0]); thisNote++) {
+    int noteDuration = noteDurations[thisNote];
+    
+    // Play the note
+    tone(BUZZER, melody[thisNote], noteDuration);
+    
+    // Pause between notes
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
 
-  Serial.println(debug);
+    // Stop the tone playing
+    noTone(BUZZER);
+  }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  //print_debug_info();
+  //buzzer_tune();
+  //play_twinkle();
   //run_task();
-  int x = ir_check();
+  //int x = ir_check();
+  //Serial.println(x);
   //Serial.println(String(analogRead(A2)) + "\t" + String(analogRead(A1)) + "\t" + String(analogRead(A0)));
   //delay(100);
   //line_follow();
-  // rgb_check();
+  //rgb_check();
   // ir_check();
   //sensor_check();
 }
